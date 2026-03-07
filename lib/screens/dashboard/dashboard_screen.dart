@@ -21,9 +21,7 @@ class DashboardScreen extends ConsumerWidget {
     final budgets = ref.watch(budgetsProvider);
     final now = DateTime.now();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: AppBar(title: const Text('Home')),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(accountsProvider);
@@ -31,8 +29,39 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(budgetsProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
           children: [
+            // ── Hero card ──────────────────────────────────────────────
+            accounts.when(
+              data: (accs) =>
+                  _HeroCard(accounts: accs, year: now.year, month: now.month),
+              loading: () => const SizedBox(height: 130),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 22),
+
+            // ── Accounts ──────────────────────────────────────────────
+            _SectionHeader(
+              title: 'Accounts',
+              action: 'Manage',
+              onAction: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AccountsScreen()),
+              ),
+            ),
+            const SizedBox(height: 10),
+            accounts.when(
+              data: (accs) {
+                if (accs.isEmpty) {
+                  return _EmptyHint('No accounts yet — tap Manage to add one');
+                }
+                return _AccountScroll(accounts: accs);
+              },
+              loading: () => const SizedBox(
+                  height: 92, child: Center(child: LinearProgressIndicator())),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 22),
+
             // ── Budgets ───────────────────────────────────────────────
             budgets.when(
               data: (bs) {
@@ -48,15 +77,13 @@ class DashboardScreen extends ConsumerWidget {
                             builder: (_) => const BudgetsScreen()),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     _Card(
                       child: Column(
-                        children: bs
-                            .map((b) => _BudgetRow(budget: b))
-                            .toList(),
+                        children: bs.map((b) => _BudgetRow(budget: b)).toList(),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 22),
                   ],
                 );
               },
@@ -64,40 +91,131 @@ class DashboardScreen extends ConsumerWidget {
               error: (_, __) => const SizedBox.shrink(),
             ),
 
-            // ── Accounts ──────────────────────────────────────────────
-            _SectionHeader(
-              title: 'Accounts',
-              action: 'Manage',
-              onAction: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AccountsScreen()),
-              ),
-            ),
-            const SizedBox(height: 8),
-            accounts.when(
-              data: (accs) {
-                if (accs.isEmpty) {
-                  return _EmptyHint(
-                      'No accounts yet — tap Manage to add one');
-                }
-                return _Card(child: _AccountsGrid(accounts: accs));
-              },
-              loading: () => const SizedBox(
-                  height: 60, child: Center(child: LinearProgressIndicator())),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 14),
-
             // ── Category spending donut ────────────────────────────────
             _SectionHeader(
-              title: 'Categories',
+              title: 'Spending',
               subtitle: Formatters.monthYear(now),
             ),
-            const SizedBox(height: 8),
-            _Card(
-              child: _CategoryDonut(year: now.year, month: now.month),
-            ),
+            const SizedBox(height: 10),
+            _Card(child: _CategoryDonut(year: now.year, month: now.month)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Hero card ────────────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  final List<Account> accounts;
+  final int year, month;
+  const _HeroCard(
+      {required this.accounts, required this.year, required this.month});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = accounts.fold(0.0, (s, a) => s + a.balance);
+    final scheme = Theme.of(context).colorScheme;
+    final repo = TransactionRepository();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      decoration: BoxDecoration(
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Total Balance',
+            style:
+                TextStyle(color: scheme.onPrimary.withOpacity(0.72), fontSize: 13),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            Formatters.currency(total),
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(height: 1, color: scheme.onPrimary.withOpacity(0.15)),
+          const SizedBox(height: 14),
+          FutureBuilder<List<double>>(
+            future: Future.wait([
+              repo.getTotalByTypeAndMonth('income', year, month),
+              repo.getTotalByTypeAndMonth('expense', year, month),
+            ]),
+            builder: (ctx, snap) {
+              final income = snap.data?[0] ?? 0;
+              final expense = snap.data?[1] ?? 0;
+              final net = income - expense;
+              final onP = scheme.onPrimary;
+              return Row(
+                children: [
+                  _HeroStat(
+                      label: 'Income',
+                      value: Formatters.currencyCompact(income),
+                      color: onP),
+                  Container(width: 1, height: 28, color: onP.withOpacity(0.2)),
+                  _HeroStat(
+                      label: 'Expense',
+                      value: Formatters.currencyCompact(expense),
+                      color: onP,
+                      center: true),
+                  Container(width: 1, height: 28, color: onP.withOpacity(0.2)),
+                  _HeroStat(
+                    label: 'Net',
+                    value: (net >= 0 ? '+' : '') +
+                        Formatters.currencyCompact(net),
+                    color: onP,
+                    end: true,
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  final String label, value;
+  final Color color;
+  final bool center, end;
+  const _HeroStat(
+      {required this.label,
+      required this.value,
+      required this.color,
+      this.center = false,
+      this.end = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final align = end
+        ? CrossAxisAlignment.end
+        : center
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start;
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: align,
+        children: [
+          Text(label,
+              style: TextStyle(color: color.withOpacity(0.65), fontSize: 11)),
+          const SizedBox(height: 3),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
@@ -115,14 +233,14 @@ class _Card extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: child,
     );
   }
 }
 
-// ── Section header ──────────────────────────────────────────────────────────
+// ── Section header ───────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -141,17 +259,15 @@ class _SectionHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2),
-            ),
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.1)),
             if (subtitle != null)
               Text(subtitle!,
                   style: TextStyle(
-                      fontSize: 13, color: scheme.onSurfaceVariant)),
+                      fontSize: 12, color: scheme.onSurfaceVariant)),
           ],
         ),
         const Spacer(),
@@ -162,7 +278,7 @@ class _SectionHeader extends StatelessWidget {
               children: [
                 Text(action!,
                     style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: scheme.primary,
                         fontWeight: FontWeight.w500)),
                 Icon(Icons.chevron_right, size: 16, color: scheme.primary),
@@ -174,86 +290,68 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Monthly summary ──────────────────────────────────────────────────────────
+// ── Accounts horizontal scroll ───────────────────────────────────────────────
 
-class _MonthlySummaryCard extends StatelessWidget {
-  final int year, month;
-  const _MonthlySummaryCard({required this.year, required this.month});
+const _accountColors = [
+  Color(0xFF1B8A5A),
+  Color(0xFF1565C0),
+  Color(0xFF6A1B9A),
+  Color(0xFFE65100),
+  Color(0xFF00838F),
+  Color(0xFFC62828),
+];
 
-  @override
-  Widget build(BuildContext context) {
-    final repo = TransactionRepository();
-    final scheme = Theme.of(context).colorScheme;
-    return FutureBuilder<List<double>>(
-      future: Future.wait([
-        repo.getTotalByTypeAndMonth('income', year, month),
-        repo.getTotalByTypeAndMonth('expense', year, month),
-      ]),
-      builder: (ctx, snap) {
-        final income = snap.data?[0] ?? 0;
-        final expense = snap.data?[1] ?? 0;
-        final net = income - expense;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _StatCell(
-                  label: 'Income',
-                  value: Formatters.currencyCompact(income),
-                  color: const Color(0xFF4CAF50),
-                ),
-              ),
-              Container(
-                  width: 1, height: 36, color: scheme.outlineVariant),
-              Expanded(
-                child: _StatCell(
-                  label: 'Expense',
-                  value: Formatters.currencyCompact(expense),
-                  color: scheme.error,
-                ),
-              ),
-              Container(
-                  width: 1, height: 36, color: scheme.outlineVariant),
-              Expanded(
-                child: _StatCell(
-                  label: 'Net',
-                  value: (net >= 0 ? '+' : '') +
-                      Formatters.currencyCompact(net.abs()),
-                  color: net >= 0 ? const Color(0xFF4CAF50) : scheme.error,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  final String label, value;
-  final Color color;
-  const _StatCell(
-      {required this.label, required this.value, required this.color});
+class _AccountScroll extends StatelessWidget {
+  final List<Account> accounts;
+  const _AccountScroll({required this.accounts});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 10,
-                color: Theme.of(context).colorScheme.onSurfaceVariant)),
-        const SizedBox(height: 3),
-        Text(value,
-            style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.bold, color: color)),
-      ],
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: accounts.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (ctx, i) {
+          final acc = accounts[i];
+          final color = _accountColors[i % _accountColors.length];
+          final isNeg = acc.balance < 0;
+          return Container(
+            width: 148,
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  acc.isCredit ? Icons.credit_card : Icons.account_balance,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+                const Spacer(),
+                Text(
+                  acc.name,
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  Formatters.currencyCompact(acc.balance),
+                  style: TextStyle(
+                    color: isNeg ? Colors.red[200] : Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -292,42 +390,50 @@ class _BudgetRow extends ConsumerWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => BudgetDetailScreen(budget: budget))),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
               children: [
-                // Circular progress ring
                 _RingProgress(
                   progress: s.progress,
                   color: progressColor,
                   label: '${(s.progress * 100).toInt()}%',
                 ),
-                const SizedBox(width: 10),
-                // Name + spent/limit
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(budget.name,
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600)),
+                              fontSize: 15, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
                       Text(
                         '${Formatters.currencyCompact(s.spent)} of ${Formatters.currencyCompact(budget.limitAmount)}',
                         style: TextStyle(
-                            fontSize: 13,
-                            color: scheme.onSurfaceVariant),
+                            fontSize: 12, color: scheme.onSurfaceVariant),
                       ),
                     ],
                   ),
                 ),
-                // Remaining
-                Text(
-                  Formatters.currencyCompact(s.remaining.abs()),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: s.isOverBudget ? scheme.error : const Color(0xFF4CAF50),
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      Formatters.currencyCompact(s.remaining.abs()),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: s.isOverBudget
+                            ? scheme.error
+                            : const Color(0xFF4CAF50),
+                      ),
+                    ),
+                    Text(
+                      s.isOverBudget ? 'over' : 'left',
+                      style: TextStyle(
+                          fontSize: 10, color: scheme.onSurfaceVariant),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -352,8 +458,8 @@ class _RingProgress extends StatelessWidget {
     return Column(
       children: [
         SizedBox(
-          width: 42,
-          height: 42,
+          width: 44,
+          height: 44,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -365,10 +471,10 @@ class _RingProgress extends StatelessWidget {
                 strokeCap: StrokeCap.round,
               ),
               Container(
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.18),
+                  color: color.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.track_changes_outlined,
@@ -383,84 +489,6 @@ class _RingProgress extends StatelessWidget {
                 fontSize: 10,
                 color: Theme.of(context).colorScheme.onSurfaceVariant)),
       ],
-    );
-  }
-}
-
-// ── Accounts 2-col grid ──────────────────────────────────────────────────────
-
-const _accountColors = [
-  Color(0xFF1B8A5A), // green
-  Color(0xFF1565C0), // blue
-  Color(0xFF6A1B9A), // purple
-  Color(0xFFE65100), // orange
-  Color(0xFF00838F), // teal
-  Color(0xFFC62828), // red
-];
-
-class _AccountsGrid extends StatelessWidget {
-  final List<Account> accounts;
-  const _AccountsGrid({required this.accounts});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: accounts.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 2.6,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemBuilder: (ctx, i) {
-        final acc = accounts[i];
-        final colorIndex = i % _accountColors.length;
-        final color = _accountColors[colorIndex];
-        final isNegative = acc.balance < 0;
-        return Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                acc.isCredit
-                    ? Icons.credit_card
-                    : Icons.account_balance,
-                size: 18,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(acc.name,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis),
-                  Text(
-                    Formatters.currencyCompact(acc.balance),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isNegative ? scheme.error : scheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -509,12 +537,10 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
           );
         }
         final entries = data.entries.toList();
-        final total =
-            entries.fold(0.0, (s, e) => s + e.value);
+        final total = entries.fold(0.0, (s, e) => s + e.value);
 
         return Row(
           children: [
-            // Donut chart
             SizedBox(
               width: 130,
               height: 130,
@@ -533,7 +559,7 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
                       color: _chartColors[i % _chartColors.length],
                       value: e.value.value,
                       title: touched ? '${pct.toStringAsFixed(0)}%' : '',
-                      radius: touched ? 52 : 42,
+                      radius: touched ? 54 : 44,
                       titleStyle: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -546,7 +572,6 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
               ),
             ),
             const SizedBox(width: 16),
-            // Legend
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,13 +591,13 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(e.value.key,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(fontSize: 13),
                               overflow: TextOverflow.ellipsis),
                         ),
                         Text(
                           Formatters.currencyCompact(e.value.value),
                           style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: scheme.error,
                               fontWeight: FontWeight.w600),
                         ),
