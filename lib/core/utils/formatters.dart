@@ -7,16 +7,16 @@ class Formatters {
     decimalDigits: 2,
   );
 
-  static final _compactFormatter = NumberFormat.compactCurrency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 1,
-  );
-
   static String currency(double amount) => _currencyFormatter.format(amount);
 
-  static String currencyCompact(double amount) =>
-      _compactFormatter.format(amount);
+  static String currencyCompact(double amount) {
+    final abs = amount.abs();
+    final sign = amount < 0 ? '-' : '';
+    if (abs >= 1e7) return '${sign}₹${(abs / 1e7).toStringAsFixed(1)}Cr';
+    if (abs >= 1e5) return '${sign}₹${(abs / 1e5).toStringAsFixed(1)}L';
+    if (abs >= 1000) return '${sign}₹${(abs / 1000).toStringAsFixed(1)}K';
+    return '${sign}₹${abs.toStringAsFixed(0)}';
+  }
 
   static String date(DateTime dt) => DateFormat('dd MMM yyyy').format(dt);
 

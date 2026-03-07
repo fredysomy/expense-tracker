@@ -33,10 +33,6 @@ class DashboardScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
           children: [
-            // ── Monthly balance summary ────────────────────────────────
-            _MonthlySummaryCard(year: now.year, month: now.month),
-            const SizedBox(height: 14),
-
             // ── Budgets ───────────────────────────────────────────────
             budgets.when(
               data: (bs) {
@@ -148,14 +144,14 @@ class _SectionHeader extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 0.2),
             ),
             if (subtitle != null)
               Text(subtitle!,
                   style: TextStyle(
-                      fontSize: 10, color: scheme.onSurfaceVariant)),
+                      fontSize: 13, color: scheme.onSurfaceVariant)),
           ],
         ),
         const Spacer(),
@@ -313,12 +309,12 @@ class _BudgetRow extends ConsumerWidget {
                     children: [
                       Text(budget.name,
                           style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500)),
+                              fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
                       Text(
                         '${Formatters.currencyCompact(s.spent)} of ${Formatters.currencyCompact(budget.limitAmount)}',
                         style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 13,
                             color: scheme.onSurfaceVariant),
                       ),
                     ],
@@ -328,8 +324,8 @@ class _BudgetRow extends ConsumerWidget {
                 Text(
                   Formatters.currencyCompact(s.remaining.abs()),
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: s.isOverBudget ? scheme.error : const Color(0xFF4CAF50),
                   ),
                 ),
@@ -449,13 +445,13 @@ class _AccountsGrid extends StatelessWidget {
                 children: [
                   Text(acc.name,
                       style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w500),
+                          fontSize: 15, fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis),
                   Text(
                     Formatters.currencyCompact(acc.balance),
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                       color: isNegative ? scheme.error : scheme.onSurface,
                     ),
                   ),
@@ -544,7 +540,7 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
                           fontWeight: FontWeight.bold),
                     );
                   }).toList(),
-                  centerSpaceRadius: 30,
+                  centerSpaceRadius: 14,
                   sectionsSpace: 2,
                 ),
               ),
@@ -570,15 +566,15 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(e.value.key,
-                              style: const TextStyle(fontSize: 12),
+                              style: const TextStyle(fontSize: 14),
                               overflow: TextOverflow.ellipsis),
                         ),
                         Text(
                           Formatters.currencyCompact(e.value.value),
                           style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               color: scheme.error,
-                              fontWeight: FontWeight.w500),
+                              fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
