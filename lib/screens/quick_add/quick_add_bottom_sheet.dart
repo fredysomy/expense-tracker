@@ -185,8 +185,9 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                   child: GestureDetector(
                     onTap: () => setState(() => _selectedAccount = acc),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                      height: 34,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
                         color: sel
                             ? scheme.primary

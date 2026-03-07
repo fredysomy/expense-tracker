@@ -201,15 +201,32 @@ class _AddTransactionScreenState
                     style: TextStyle(fontSize: 12, color: scheme.error))
                 : Wrap(
                     spacing: 6,
-                    runSpacing: 4,
+                    runSpacing: 6,
                     children: accounts.map((acc) {
                       final sel = _selectedAccount?.id == acc.id;
-                      return ChoiceChip(
-                        label: Text(acc.name,
-                            style: const TextStyle(fontSize: 12)),
-                        selected: sel,
-                        onSelected: (_) =>
-                            setState(() => _selectedAccount = acc),
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedAccount = acc),
+                        child: Container(
+                          height: 32,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: sel
+                                ? scheme.primary
+                                : scheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            acc.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: sel
+                                  ? scheme.onPrimary
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),

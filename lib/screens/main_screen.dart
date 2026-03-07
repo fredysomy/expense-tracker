@@ -3,6 +3,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'transactions/transactions_screen.dart';
 import 'analytics/analytics_screen.dart';
 import 'categories/categories_screen.dart';
+import 'budgets/budgets_screen.dart';
 import '../screens/quick_add/quick_add_bottom_sheet.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final _screens = const [
     DashboardScreen(),
     CategoriesScreen(),
+    BudgetsScreen(),
     AnalyticsScreen(),
     TransactionsScreen(),
   ];
@@ -47,6 +49,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.category_outlined),
             selectedIcon: Icon(Icons.category),
             label: 'Categories',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Budgets',
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
