@@ -26,7 +26,7 @@ class BudgetsScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add, size: 20),
+            icon: const Icon(Icons.add, size: 22),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AddBudgetScreen()),
             ),
@@ -40,14 +40,21 @@ class BudgetsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.donut_small_outlined, size: 40, color: scheme.outline),
-                  const SizedBox(height: 12),
-                  Text('No budgets yet',
-                      style: TextStyle(color: scheme.onSurfaceVariant)),
+                  Icon(Icons.account_balance_wallet_outlined,
+                      size: 52, color: scheme.outline),
                   const SizedBox(height: 16),
+                  Text('No budgets yet',
+                      style: TextStyle(
+                          fontSize: 16, color: scheme.onSurfaceVariant)),
+                  const SizedBox(height: 8),
+                  Text('Track your spending by category',
+                      style: TextStyle(
+                          fontSize: 13, color: scheme.onSurfaceVariant)),
+                  const SizedBox(height: 24),
                   FilledButton.tonal(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const AddBudgetScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const AddBudgetScreen()),
                     ),
                     child: const Text('Create Budget'),
                   ),
@@ -55,11 +62,10 @@ class BudgetsScreen extends ConsumerWidget {
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
             itemCount: bs.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (ctx, i) => _BudgetRow(budget: bs[i]),
+            itemBuilder: (ctx, i) => _BudgetCard(budget: bs[i]),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -69,9 +75,9 @@ class BudgetsScreen extends ConsumerWidget {
   }
 }
 
-class _BudgetRow extends ConsumerWidget {
+class _BudgetCard extends ConsumerWidget {
   final Budget budget;
-  const _BudgetRow({required this.budget});
+  const _BudgetCard({required this.budget});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,54 +93,98 @@ class _BudgetRow extends ConsumerWidget {
                 : scheme.primary;
 
         return InkWell(
+          borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => BudgetDetailScreen(budget: budget)),
+            MaterialPageRoute(
+                builder: (_) => BudgetDetailScreen(budget: budget)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(budget.name,
                           style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w500)),
+                              fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
-                    Text(
-                      '${Formatters.currencyCompact(s.spent)} / ${Formatters.currencyCompact(budget.limitAmount)}',
-                      style: TextStyle(
-                          fontSize: 12, color: scheme.onSurfaceVariant),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${(s.progress * 100).toInt()}%',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: color),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                LinearProgressIndicator(
-                  value: s.progress,
-                  backgroundColor: scheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation(color),
-                  minHeight: 4,
-                  borderRadius: BorderRadius.circular(2),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: s.progress.clamp(0.0, 1.0),
+                    backgroundColor: scheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation(color),
+                    minHeight: 8,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       s.isOverBudget
                           ? 'Over by ${Formatters.currency(s.overSpent)}'
-                          : '${Formatters.currency(s.remaining)} left',
+                          : '${Formatters.currency(s.remaining)} remaining',
                       style: TextStyle(
-                          fontSize: 11,
-                          color: s.isOverBudget ? scheme.error : scheme.onSurfaceVariant),
+                          fontSize: 12,
+                          color: s.isOverBudget
+                              ? scheme.error
+                              : scheme.onSurfaceVariant),
                     ),
-                    Text(
-                      s.isOnTrack ? 'On track' : 'Pace exceeded',
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: s.isOnTrack ? const Color(0xFF2E7D32) : Colors.orange),
+                    Row(
+                      children: [
+                        Text(
+                          '${Formatters.currencyCompact(s.spent)} / ${Formatters.currencyCompact(budget.limitAmount)}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: s.isOnTrack
+                                ? const Color(0xFF2E7D32).withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            s.isOnTrack ? 'On track' : 'Behind',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: s.isOnTrack
+                                    ? const Color(0xFF2E7D32)
+                                    : Colors.orange),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -143,9 +193,14 @@ class _BudgetRow extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 12),
-        child: LinearProgressIndicator(),
+      loading: () => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        height: 100,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: LinearProgressIndicator()),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
