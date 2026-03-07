@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../providers/transaction_provider.dart';
@@ -10,18 +11,22 @@ import '../../models/account.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/utils/formatters.dart';
 
-Future<void> showQuickAdd(BuildContext context) {
+Future<void> showQuickAdd(BuildContext context, {bool closeAppOnSave = false}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => const ProviderScope(child: _QuickAddSheet()),
+    builder: (_) => ProviderScope(
+      parent: ProviderScope.containerOf(context),
+      child: _QuickAddSheet(closeAppOnSave: closeAppOnSave),
+    ),
   );
 }
 
 class _QuickAddSheet extends ConsumerStatefulWidget {
-  const _QuickAddSheet();
+  final bool closeAppOnSave;
+  const _QuickAddSheet({this.closeAppOnSave = false});
 
   @override
   ConsumerState<_QuickAddSheet> createState() => _QuickAddSheetState();
@@ -355,7 +360,10 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
       await ref
           .read(transactionsProvider.notifier)
           .add(txn, _effectiveCategory!);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+        if (widget.closeAppOnSave) SystemNavigator.pop();
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

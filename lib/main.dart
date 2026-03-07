@@ -39,5 +39,5 @@ void main() async {
 
 void _triggerQuickAdd() {
   final ctx = navigatorKey.currentContext;
-  if (ctx != null) showQuickAdd(ctx);
+  if (ctx != null) showQuickAdd(ctx, closeAppOnSave: true);
 }
