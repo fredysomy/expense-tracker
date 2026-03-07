@@ -20,8 +20,20 @@ class DashboardScreen extends ConsumerWidget {
     final accounts = ref.watch(accountsProvider);
     final budgets = ref.watch(budgetsProvider);
     final now = DateTime.now();
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(
+        title: const Text('Home',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings_outlined,
+                size: 22, color: scheme.onSurfaceVariant),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(accountsProvider);
@@ -29,75 +41,75 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(budgetsProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 80),
           children: [
-            // ── Hero card ──────────────────────────────────────────────
-            accounts.when(
-              data: (accs) =>
-                  _HeroCard(accounts: accs, year: now.year, month: now.month),
-              loading: () => const SizedBox(height: 130),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 22),
-
-            // ── Accounts ──────────────────────────────────────────────
-            _SectionHeader(
-              title: 'Accounts',
-              action: 'Manage',
-              onAction: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AccountsScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-            accounts.when(
-              data: (accs) {
-                if (accs.isEmpty) {
-                  return _EmptyHint('No accounts yet — tap Manage to add one');
-                }
-                return _AccountScroll(accounts: accs);
-              },
-              loading: () => const SizedBox(
-                  height: 92, child: Center(child: LinearProgressIndicator())),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 22),
-
-            // ── Budgets ───────────────────────────────────────────────
+            // ── Budgets ──────────────────────────────────────────────
             budgets.when(
               data: (bs) {
                 if (bs.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SectionHeader(
-                      title: 'Budgets',
-                      action: 'See all',
-                      onAction: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const BudgetsScreen()),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _Card(
-                      child: Column(
-                        children: bs.map((b) => _BudgetRow(budget: b)).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                  ],
+                return _Section(
+                  title: 'Budgets',
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BudgetsScreen()),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 4),
+                      ...bs.map((b) => _BudgetRow(budget: b)),
+                    ],
+                  ),
                 );
               },
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
 
-            // ── Category spending donut ────────────────────────────────
-            _SectionHeader(
-              title: 'Spending',
-              subtitle: Formatters.monthYear(now),
+            // ── Accounts ──────────────────────────────────────────────
+            accounts.when(
+              data: (accs) => _Section(
+                title: 'Accounts',
+                onAction: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                ),
+                child: accs.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text('No accounts yet',
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: scheme.onSurfaceVariant)),
+                      )
+                    : _AccountsGrid(accounts: accs),
+              ),
+              loading: () => const SizedBox(
+                  height: 60,
+                  child: Center(child: LinearProgressIndicator())),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+
+            // ── Categories donut ──────────────────────────────────────
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Categories',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w700)),
+                    Text(Formatters.monthYear(now),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant)),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 10),
-            _Card(child: _CategoryDonut(year: now.year, month: now.month)),
+            _SurfaceCard(
+              child: _CategoryDonut(year: now.year, month: now.month),
+            ),
           ],
         ),
       ),
@@ -105,132 +117,58 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-// ── Hero card ────────────────────────────────────────────────────────────────
+// ── Section card with header ─────────────────────────────────────────────────
 
-class _HeroCard extends StatelessWidget {
-  final List<Account> accounts;
-  final int year, month;
-  const _HeroCard(
-      {required this.accounts, required this.year, required this.month});
+class _Section extends StatelessWidget {
+  final String title;
+  final VoidCallback? onAction;
+  final Widget child;
+  const _Section({required this.title, this.onAction, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final total = accounts.fold(0.0, (s, a) => s + a.balance);
     final scheme = Theme.of(context).colorScheme;
-    final repo = TransactionRepository();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: _SurfaceCard(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                if (onAction != null)
+                  GestureDetector(
+                    onTap: onAction,
+                    child: Icon(Icons.chevron_right,
+                        size: 22, color: scheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
 
+class _SurfaceCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  const _SurfaceCard(
+      {required this.child,
+      this.padding = const EdgeInsets.all(14)});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Total Balance',
-            style:
-                TextStyle(color: scheme.onPrimary.withOpacity(0.72), fontSize: 13),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            Formatters.currency(total),
-            style: TextStyle(
-              color: scheme.onPrimary,
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(height: 1, color: scheme.onPrimary.withOpacity(0.15)),
-          const SizedBox(height: 14),
-          FutureBuilder<List<double>>(
-            future: Future.wait([
-              repo.getTotalByTypeAndMonth('income', year, month),
-              repo.getTotalByTypeAndMonth('expense', year, month),
-            ]),
-            builder: (ctx, snap) {
-              final income = snap.data?[0] ?? 0;
-              final expense = snap.data?[1] ?? 0;
-              final net = income - expense;
-              final onP = scheme.onPrimary;
-              return Row(
-                children: [
-                  _HeroStat(
-                      label: 'Income',
-                      value: Formatters.currencyCompact(income),
-                      color: onP),
-                  Container(width: 1, height: 28, color: onP.withOpacity(0.2)),
-                  _HeroStat(
-                      label: 'Expense',
-                      value: Formatters.currencyCompact(expense),
-                      color: onP,
-                      center: true),
-                  Container(width: 1, height: 28, color: onP.withOpacity(0.2)),
-                  _HeroStat(
-                    label: 'Net',
-                    value: (net >= 0 ? '+' : '') +
-                        Formatters.currencyCompact(net),
-                    color: onP,
-                    end: true,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroStat extends StatelessWidget {
-  final String label, value;
-  final Color color;
-  final bool center, end;
-  const _HeroStat(
-      {required this.label,
-      required this.value,
-      required this.color,
-      this.center = false,
-      this.end = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final align = end
-        ? CrossAxisAlignment.end
-        : center
-            ? CrossAxisAlignment.center
-            : CrossAxisAlignment.start;
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: align,
-        children: [
-          Text(label,
-              style: TextStyle(color: color.withOpacity(0.65), fontSize: 11)),
-          const SizedBox(height: 3),
-          Text(value,
-              style: TextStyle(
-                  color: color, fontSize: 14, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Reusable card wrapper ────────────────────────────────────────────────────
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
+      padding: padding,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
@@ -240,125 +178,9 @@ class _Card extends StatelessWidget {
   }
 }
 
-// ── Section header ───────────────────────────────────────────────────────────
+// ── Budget row ───────────────────────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String? action;
-  final VoidCallback? onAction;
-  const _SectionHeader(
-      {required this.title, this.subtitle, this.action, this.onAction});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title,
-                style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.1)),
-            if (subtitle != null)
-              Text(subtitle!,
-                  style: TextStyle(
-                      fontSize: 12, color: scheme.onSurfaceVariant)),
-          ],
-        ),
-        const Spacer(),
-        if (action != null && onAction != null)
-          GestureDetector(
-            onTap: onAction,
-            child: Row(
-              children: [
-                Text(action!,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w500)),
-                Icon(Icons.chevron_right, size: 16, color: scheme.primary),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ── Accounts horizontal scroll ───────────────────────────────────────────────
-
-const _accountColors = [
-  Color(0xFF1B8A5A),
-  Color(0xFF1565C0),
-  Color(0xFF6A1B9A),
-  Color(0xFFE65100),
-  Color(0xFF00838F),
-  Color(0xFFC62828),
-];
-
-class _AccountScroll extends StatelessWidget {
-  final List<Account> accounts;
-  const _AccountScroll({required this.accounts});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: accounts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (ctx, i) {
-          final acc = accounts[i];
-          final color = _accountColors[i % _accountColors.length];
-          final isNeg = acc.balance < 0;
-          return Container(
-            width: 148,
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  acc.isCredit ? Icons.credit_card : Icons.account_balance,
-                  color: Colors.white70,
-                  size: 16,
-                ),
-                const Spacer(),
-                Text(
-                  acc.name,
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  Formatters.currencyCompact(acc.balance),
-                  style: TextStyle(
-                    color: isNeg ? Colors.red[200] : Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ── Budget row with circular ring ────────────────────────────────────────────
-
-const _budgetColors = [
+const _budgetAccents = [
   Color(0xFF7C4DFF),
   Color(0xFF00BCD4),
   Color(0xFF4CAF50),
@@ -375,30 +197,28 @@ class _BudgetRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(budgetStatsProvider(budget));
     final scheme = Theme.of(context).colorScheme;
-    final colorIndex =
-        budget.name.codeUnits.fold(0, (a, b) => a + b) % _budgetColors.length;
-    final accentColor = _budgetColors[colorIndex];
+    final accentIdx =
+        budget.name.codeUnits.fold(0, (a, b) => a + b) % _budgetAccents.length;
+    final accent = _budgetAccents[accentIdx];
 
     return stats.when(
       data: (s) {
-        final progressColor = s.isOverBudget
+        final ringColor = s.isOverBudget
             ? scheme.error
             : s.progress > 0.8
                 ? Colors.orange
-                : accentColor;
+                : accent;
         return InkWell(
           onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => BudgetDetailScreen(budget: budget))),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                _RingProgress(
-                  progress: s.progress,
-                  color: progressColor,
-                  label: '${(s.progress * 100).toInt()}%',
-                ),
-                const SizedBox(width: 12),
+                // Ring + icon
+                _RingIcon(progress: s.progress, color: ringColor),
+                const SizedBox(width: 14),
+                // Name + spent/limit
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,90 +226,171 @@ class _BudgetRow extends ConsumerWidget {
                       Text(budget.name,
                           style: const TextStyle(
                               fontSize: 15, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        '${Formatters.currencyCompact(s.spent)} of ${Formatters.currencyCompact(budget.limitAmount)}',
+                        '${Formatters.currency(s.spent)} of ${Formatters.currency(budget.limitAmount)}',
                         style: TextStyle(
                             fontSize: 12, color: scheme.onSurfaceVariant),
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      Formatters.currencyCompact(s.remaining.abs()),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: s.isOverBudget
-                            ? scheme.error
-                            : const Color(0xFF4CAF50),
-                      ),
-                    ),
-                    Text(
-                      s.isOverBudget ? 'over' : 'left',
-                      style: TextStyle(
-                          fontSize: 10, color: scheme.onSurfaceVariant),
-                    ),
-                  ],
+                // Remaining
+                Text(
+                  Formatters.currency(s.remaining.abs()),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: s.isOverBudget
+                        ? scheme.error
+                        : const Color(0xFF4CAF50),
+                  ),
                 ),
               ],
             ),
           ),
         );
       },
-      loading: () => const SizedBox(height: 28),
+      loading: () => const SizedBox(height: 44),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
 
-class _RingProgress extends StatelessWidget {
+class _RingIcon extends StatelessWidget {
   final double progress;
   final Color color;
-  final String label;
-  const _RingProgress(
-      {required this.progress, required this.color, required this.label});
+  const _RingIcon({required this.progress, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         SizedBox(
-          width: 44,
-          height: 44,
+          width: 52,
+          height: 52,
           child: Stack(
             alignment: Alignment.center,
             children: [
               CircularProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
-                backgroundColor: color.withOpacity(0.15),
+                backgroundColor: color.withOpacity(0.18),
                 valueColor: AlwaysStoppedAnimation(color),
                 strokeWidth: 4,
                 strokeCap: StrokeCap.round,
               ),
               Container(
-                width: 28,
-                height: 28,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: const Color(0xFF7C4DFF).withOpacity(0.85),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.track_changes_outlined,
-                    size: 14, color: color),
+                child: const Icon(Icons.track_changes_outlined,
+                    size: 18, color: Colors.white),
               ),
             ],
           ),
         ),
         const SizedBox(height: 2),
-        Text(label,
-            style: TextStyle(
-                fontSize: 10,
-                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text(
+          '${(progress * 100).toInt()}%',
+          style: TextStyle(
+              fontSize: 10,
+              color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
       ],
     );
+  }
+}
+
+// ── Accounts 2-col grid ──────────────────────────────────────────────────────
+
+class _AccountsGrid extends StatelessWidget {
+  final List<Account> accounts;
+  const _AccountsGrid({required this.accounts});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(top: 12),
+      itemCount: accounts.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 2.5,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 10,
+      ),
+      itemBuilder: (ctx, i) {
+        final acc = accounts[i];
+        final color = _accountColor(acc.type);
+        final isNeg = acc.balance < 0;
+        return Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(_accountIcon(acc.type),
+                  size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(acc.name,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    Formatters.currencyCompact(acc.balance),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isNeg ? scheme.error : scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static Color _accountColor(String type) {
+    switch (type) {
+      case 'cash':
+        return const Color(0xFF00897B);
+      case 'wallet':
+        return const Color(0xFF00897B);
+      case 'credit':
+        return const Color(0xFF3949AB);
+      default:
+        return const Color(0xFF1E88E5);
+    }
+  }
+
+  static IconData _accountIcon(String type) {
+    switch (type) {
+      case 'credit':
+        return Icons.credit_card;
+      case 'wallet':
+        return Icons.account_balance_wallet;
+      case 'cash':
+        return Icons.money;
+      default:
+        return Icons.account_balance;
+    }
   }
 }
 
@@ -531,8 +432,8 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Center(
               child: Text('No expenses this month',
-                  style: TextStyle(
-                      fontSize: 13, color: scheme.onSurfaceVariant)),
+                  style:
+                      TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
             ),
           );
         }
@@ -554,7 +455,8 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
                   sections: entries.asMap().entries.map((e) {
                     final i = e.key;
                     final touched = i == _touched;
-                    final pct = total > 0 ? e.value.value / total * 100 : 0;
+                    final pct =
+                        total > 0 ? e.value.value / total * 100 : 0;
                     return PieChartSectionData(
                       color: _chartColors[i % _chartColors.length],
                       value: e.value.value,
@@ -612,19 +514,4 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
       },
     );
   }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _EmptyHint extends StatelessWidget {
-  final String text;
-  const _EmptyHint(this.text);
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant)),
-      );
 }
