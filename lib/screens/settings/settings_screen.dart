@@ -128,7 +128,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _export() async {
     setState(() => _exporting = true);
     try {
-      await ExportImportService.exportAndShare();
+      final path = await ExportImportService.exportAndShare();
+      _showSnack('Backup saved. To import later, pick the file from:\n$path');
     } catch (e) {
       _showSnack('Export failed: $e');
     } finally {
@@ -164,7 +165,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       _showSnack('Import complete — ${preview.transactions.length} transactions, '
           '${preview.accounts.length} accounts loaded.');
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Import error: $e\n$st');
       _showSnack('Import failed: $e');
     } finally {
       if (mounted) setState(() => _importing = false);
