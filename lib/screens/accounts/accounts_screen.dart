@@ -71,8 +71,8 @@ class _AccountCard extends ConsumerWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: scheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
@@ -90,7 +90,7 @@ class _AccountCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              Formatters.currency(account.balance.abs()),
+              Formatters.currencyCompact(account.balance),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -105,8 +105,7 @@ class _AccountCard extends ConsumerWidget {
           ],
         ),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-              builder: (_) => AddAccountScreen(account: account)),
+          MaterialPageRoute(builder: (_) => AddAccountScreen(account: account)),
         ),
         onLongPress: () => _confirmDelete(context, ref),
       ),
@@ -144,8 +143,7 @@ class _AccountCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Account'),
-        content:
-            Text('Are you sure you want to delete "${account.name}"?'),
+        content: Text('Are you sure you want to delete "${account.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),

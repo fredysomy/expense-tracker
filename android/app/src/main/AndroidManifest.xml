@@ -1,4 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Notification permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Exact alarms (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Reschedule notifications after reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Bypass battery optimization so scheduled alarms fire reliably -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
     <application
         android:label="Money Manager"
         android:name="${applicationName}"
@@ -19,11 +29,6 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Handle widget tap when app already running -->
-            <intent-filter>
-                <action android:name="QUICK_ADD"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
         </activity>
 
         <!-- Transparent overlay activity for widget quick-add -->
@@ -31,6 +36,9 @@
             android:name=".QuickAddActivity"
             android:exported="false"
             android:theme="@style/QuickAddTheme"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize" />

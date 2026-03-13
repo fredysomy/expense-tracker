@@ -27,9 +27,10 @@ class QuickAddWidget : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.quick_add_widget)
 
-            val intent = Intent(context, MainActivity::class.java).apply {
-                action = "QUICK_ADD"
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            val intent = Intent(context, QuickAddActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
+                        Intent.FLAG_ACTIVITY_NO_HISTORY
             }
             val pendingIntent = PendingIntent.getActivity(
                 context, 0, intent,

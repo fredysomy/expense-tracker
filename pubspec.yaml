@@ -16,6 +16,10 @@ dependencies:
   intl: ^0.19.0
   uuid: ^4.4.0
   cupertino_icons: ^1.0.6
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  flutter_timezone: ^5.0.1
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:

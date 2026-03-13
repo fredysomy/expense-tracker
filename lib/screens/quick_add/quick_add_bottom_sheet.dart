@@ -122,7 +122,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       padding: const EdgeInsets.symmetric(vertical: 7),
                       decoration: BoxDecoration(
-                        color: sel ? color.withOpacity(0.15) : Colors.transparent,
+                        color:
+                            sel ? color.withOpacity(0.15) : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: sel ? color : scheme.outlineVariant,
@@ -164,8 +165,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                   },
                   child: Text(
                     Formatters.date(_date),
-                    style: TextStyle(
-                        fontSize: 13, color: scheme.onSurfaceVariant),
+                    style:
+                        TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -189,9 +190,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        color: sel
-                            ? scheme.primary
-                            : scheme.surfaceContainerHigh,
+                        color:
+                            sel ? scheme.primary : scheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -199,9 +199,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: sel
-                              ? scheme.onPrimary
-                              : scheme.onSurfaceVariant,
+                          color:
+                              sel ? scheme.onPrimary : scheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -242,23 +241,20 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               final result = await showDialog<String>(
                 context: context,
                 builder: (ctx) {
-                  final ctrl =
-                      TextEditingController(text: _note);
+                  final ctrl = TextEditingController(text: _note);
                   return AlertDialog(
                     title: const Text('Add note'),
                     content: TextField(
                       controller: ctrl,
                       autofocus: true,
-                      decoration: const InputDecoration(
-                          hintText: 'Note...'),
+                      decoration: const InputDecoration(hintText: 'Note...'),
                     ),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           child: const Text('Cancel')),
                       FilledButton(
-                          onPressed: () =>
-                              Navigator.pop(ctx, ctrl.text),
+                          onPressed: () => Navigator.pop(ctx, ctrl.text),
                           child: const Text('OK')),
                     ],
                   );
@@ -289,7 +285,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                 ...parents.map((cat) {
                   final sel = _selectedParent?.id == cat.id;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: 8, top: 4),
                     child: GestureDetector(
                       onTap: () => setState(() {
                         _selectedParent = cat;
@@ -307,7 +303,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               height: 34,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 children: subs.map((cat) {
                   final sel = _selectedSub?.id == cat.id;
                   return Padding(
@@ -385,9 +382,7 @@ class _CatPill extends StatelessWidget {
       padding: EdgeInsets.symmetric(
           horizontal: small ? 10 : 12, vertical: small ? 4 : 6),
       decoration: BoxDecoration(
-        color: selected
-            ? scheme.primaryContainer
-            : scheme.surfaceContainerHigh,
+        color: selected ? scheme.primaryContainer : scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -396,18 +391,15 @@ class _CatPill extends StatelessWidget {
           Icon(
             IconHelper.getIcon(cat.icon),
             size: small ? 12 : 14,
-            color: selected
-                ? scheme.onPrimaryContainer
-                : scheme.onSurfaceVariant,
+            color:
+                selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
           ),
           const SizedBox(width: 4),
           Text(
             cat.name,
             style: TextStyle(
               fontSize: small ? 11 : 12,
-              color: selected
-                  ? scheme.onPrimaryContainer
-                  : scheme.onSurface,
+              color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
             ),
           ),
         ],
@@ -467,8 +459,7 @@ class _Keypad extends StatelessWidget {
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: scheme.onPrimary),
+                                  strokeWidth: 2, color: scheme.onPrimary),
                             )
                           : Text(
                               key,

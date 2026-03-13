@@ -11,6 +11,7 @@ import '../../models/budget.dart';
 import '../budgets/budgets_screen.dart';
 import '../budgets/budget_detail_screen.dart';
 import '../accounts/accounts_screen.dart';
+import '../settings/settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -30,7 +31,9 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(Icons.settings_outlined,
                 size: 22, color: scheme.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
           ),
         ],
       ),
@@ -76,14 +79,12 @@ class DashboardScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text('No accounts yet',
                             style: TextStyle(
-                                fontSize: 13,
-                                color: scheme.onSurfaceVariant)),
+                                fontSize: 13, color: scheme.onSurfaceVariant)),
                       )
                     : _AccountsGrid(accounts: accs),
               ),
               loading: () => const SizedBox(
-                  height: 60,
-                  child: Center(child: LinearProgressIndicator())),
+                  height: 60, child: Center(child: LinearProgressIndicator())),
               error: (_, __) => const SizedBox.shrink(),
             ),
 
@@ -100,8 +101,7 @@ class DashboardScreen extends ConsumerWidget {
                             fontSize: 17, fontWeight: FontWeight.w700)),
                     Text(Formatters.monthYear(now),
                         style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant)),
+                            fontSize: 12, color: scheme.onSurfaceVariant)),
                   ],
                 ),
               ],
@@ -161,8 +161,7 @@ class _SurfaceCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
   const _SurfaceCard(
-      {required this.child,
-      this.padding = const EdgeInsets.all(14)});
+      {required this.child, this.padding = const EdgeInsets.all(14)});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +211,7 @@ class _BudgetRow extends ConsumerWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => BudgetDetailScreen(budget: budget))),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 5),
             child: Row(
               children: [
                 // Ring + icon
@@ -225,12 +224,12 @@ class _BudgetRow extends ConsumerWidget {
                     children: [
                       Text(budget.name,
                           style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
+                              fontSize: 12, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 3),
                       Text(
                         '${Formatters.currency(s.spent)} of ${Formatters.currency(budget.limitAmount)}',
                         style: TextStyle(
-                            fontSize: 12, color: scheme.onSurfaceVariant),
+                            fontSize: 10, color: scheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -239,11 +238,10 @@ class _BudgetRow extends ConsumerWidget {
                 Text(
                   Formatters.currency(s.remaining.abs()),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: s.isOverBudget
-                        ? scheme.error
-                        : const Color(0xFF4CAF50),
+                    color:
+                        s.isOverBudget ? scheme.error : const Color(0xFF4CAF50),
                   ),
                 ),
               ],
@@ -267,8 +265,8 @@ class _RingIcon extends StatelessWidget {
     return Column(
       children: [
         SizedBox(
-          width: 52,
-          height: 52,
+          width: 46,
+          height: 46,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -280,8 +278,8 @@ class _RingIcon extends StatelessWidget {
                 strokeCap: StrokeCap.round,
               ),
               Container(
-                width: 38,
-                height: 38,
+                width: 30,
+                height: 30,
                 decoration: BoxDecoration(
                   color: const Color(0xFF7C4DFF).withOpacity(0.85),
                   shape: BoxShape.circle,
@@ -337,8 +335,8 @@ class _AccountsGrid extends StatelessWidget {
                 color: color,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(_accountIcon(acc.type),
-                  size: 20, color: Colors.white),
+              child:
+                  Icon(_accountIcon(acc.type), size: 20, color: Colors.white),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -448,15 +446,13 @@ class _CategoryDonutState extends ConsumerState<_CategoryDonut> {
               child: PieChart(
                 PieChartData(
                   pieTouchData: PieTouchData(
-                    touchCallback: (_, r) => setState(() =>
-                        _touched =
-                            r?.touchedSection?.touchedSectionIndex ?? -1),
+                    touchCallback: (_, r) => setState(() => _touched =
+                        r?.touchedSection?.touchedSectionIndex ?? -1),
                   ),
                   sections: entries.asMap().entries.map((e) {
                     final i = e.key;
                     final touched = i == _touched;
-                    final pct =
-                        total > 0 ? e.value.value / total * 100 : 0;
+                    final pct = total > 0 ? e.value.value / total * 100 : 0;
                     return PieChartSectionData(
                       color: _chartColors[i % _chartColors.length],
                       value: e.value.value,

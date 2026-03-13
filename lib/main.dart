@@ -2,42 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
+import 'core/theme/app_theme.dart';
+import 'core/notifications/notification_service.dart';
 import 'screens/quick_add/quick_add_bottom_sheet.dart';
-
-final navigatorKey = GlobalKey<NavigatorState>();
-const _widgetChannel =
-    MethodChannel('com.fredysomy.money_management/widget');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  runApp(
-    ProviderScope(
-      child: MoneyManagerApp(navigatorKey: navigatorKey),
-    ),
-  );
-
-  // Set up widget method channel after first frame
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    _widgetChannel.setMethodCallHandler((call) async {
-      if (call.method == 'onAction' && call.arguments == 'quick_add') {
-        _triggerQuickAdd();
-      }
-    });
-
-    // Check if app was launched from the widget
-    try {
-      final action =
-          await _widgetChannel.invokeMethod<String>('getInitialAction');
-      if (action == 'quick_add') {
-        await Future.delayed(const Duration(milliseconds: 400));
-        _triggerQuickAdd();
-      }
-    } catch (_) {}
-  });
+  await NotificationService.init();
+  runApp(const ProviderScope(child: MoneyManagerApp()));
 }
 
-void _triggerQuickAdd() {
-  final ctx = navigatorKey.currentContext;
-  if (ctx != null) showQuickAdd(ctx, closeAppOnSave: true);
+/// Entry point used by QuickAddActivity (widget tap).
+/// Runs a transparent Flutter surface that immediately shows the quick-add sheet.
+@pragma('vm:entry-point')
+void quickAddMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        home: const _QuickAddLauncher(),
+      ),
+    ),
+  );
+}
+
+class _QuickAddLauncher extends StatefulWidget {
+  const _QuickAddLauncher();
+  @override
+  State<_QuickAddLauncher> createState() => _QuickAddLauncherState();
+}
+
+class _QuickAddLauncherState extends State<_QuickAddLauncher> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await showQuickAdd(context, closeAppOnSave: true);
+      // Sheet was dismissed without saving — close the activity
+      if (mounted) SystemNavigator.pop();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SizedBox.shrink(),
+    );
+  }
 }
