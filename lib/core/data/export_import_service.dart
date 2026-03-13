@@ -61,15 +61,22 @@ class ExportImportService {
   /// Returns null if the user cancelled or the file is invalid.
   static Future<ImportPreview?> pickFile() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
+      type: FileType.any,
+      withData: true, // always read bytes directly — avoids path permission issues
     );
     if (result == null || result.files.isEmpty) return null;
 
-    final path = result.files.first.path;
-    if (path == null) return null;
+    final file = result.files.first;
 
-    final content = await File(path).readAsString();
+    String content;
+    if (file.bytes != null) {
+      content = String.fromCharCodes(file.bytes!);
+    } else if (file.path != null) {
+      content = await File(file.path!).readAsString();
+    } else {
+      return null;
+    }
+
     return _parse(content);
   }
 
