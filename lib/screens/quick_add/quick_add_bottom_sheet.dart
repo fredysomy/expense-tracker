@@ -11,7 +11,11 @@ import '../../models/account.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/utils/formatters.dart';
 
-Future<void> showQuickAdd(BuildContext context, {bool closeAppOnSave = false}) {
+Future<void> showQuickAdd(
+  BuildContext context, {
+  bool closeAppOnSave = false,
+  double? initialAmount,
+}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -19,22 +23,38 @@ Future<void> showQuickAdd(BuildContext context, {bool closeAppOnSave = false}) {
     backgroundColor: Colors.transparent,
     builder: (_) => ProviderScope(
       parent: ProviderScope.containerOf(context),
-      child: _QuickAddSheet(closeAppOnSave: closeAppOnSave),
+      child: _QuickAddSheet(
+        closeAppOnSave: closeAppOnSave,
+        initialAmount: initialAmount,
+      ),
     ),
   );
 }
 
 class _QuickAddSheet extends ConsumerStatefulWidget {
   final bool closeAppOnSave;
-  const _QuickAddSheet({this.closeAppOnSave = false});
+  final double? initialAmount;
+  const _QuickAddSheet({this.closeAppOnSave = false, this.initialAmount});
 
   @override
   ConsumerState<_QuickAddSheet> createState() => _QuickAddSheetState();
 }
 
 class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
-  String _amountStr = '0';
+  late String _amountStr;
   String _txnType = 'expense';
+
+  @override
+  void initState() {
+    super.initState();
+    final a = widget.initialAmount;
+    if (a != null && a > 0) {
+      _amountStr =
+          a == a.truncateToDouble() ? a.toInt().toString() : a.toStringAsFixed(2);
+    } else {
+      _amountStr = '0';
+    }
+  }
   Category? _selectedParent;
   Category? _selectedSub;
   Account? _selectedAccount;
@@ -110,7 +130,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                 final val = t.toLowerCase();
                 final sel = _txnType == val;
                 final color =
-                    val == 'expense' ? scheme.error : const Color(0xFF2E7D32);
+                    val == 'expense' ? scheme.error : const Color(0xFF58A8F0);
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() {
@@ -223,7 +243,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                     fontWeight: FontWeight.w300,
                     color: _txnType == 'expense'
                         ? scheme.error
-                        : const Color(0xFF2E7D32),
+                        : const Color(0xFF58A8F0),
                   ),
                 ),
                 const SizedBox(width: 8),

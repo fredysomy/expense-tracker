@@ -17,7 +17,7 @@ const _txnPalette = [
   Color(0xFF8E24AA),
   Color(0xFF1E88E5),
   Color(0xFF00ACC1),
-  Color(0xFF43A047),
+  Color(0xFF3A7DB4),
   Color(0xFF6D4C41),
 ];
 
@@ -271,7 +271,7 @@ class _GroupedList extends ConsumerWidget {
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: dayNet >= 0
-                          ? const Color(0xFF2E7D32).withOpacity(0.1)
+                          ? const Color(0xFF58A8F0).withOpacity(0.1)
                           : scheme.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -282,7 +282,7 @@ class _GroupedList extends ConsumerWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: dayNet >= 0
-                              ? const Color(0xFF2E7D32)
+                              ? const Color(0xFF58A8F0)
                               : scheme.error),
                     ),
                   ),
@@ -328,11 +328,11 @@ class _TxnRow extends ConsumerWidget {
             createdAt: DateTime(2000)));
     final isExpense = cat.isExpense;
     final amountColor =
-        isExpense ? scheme.error : const Color(0xFF2E7D32);
+        isExpense ? scheme.error : const Color(0xFF58A8F0);
     final colorIndex =
         cat.name.codeUnits.fold(0, (a, b) => a + b) % _txnPalette.length;
     final iconColor =
-        isExpense ? _txnPalette[colorIndex] : const Color(0xFF2E7D32);
+        isExpense ? _txnPalette[colorIndex] : const Color(0xFF58A8F0);
 
     return Dismissible(
       key: Key(txn.id),

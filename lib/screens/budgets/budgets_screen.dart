@@ -170,7 +170,7 @@ class _BudgetCard extends ConsumerWidget {
                               horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: s.isOnTrack
-                                ? const Color(0xFF2E7D32).withOpacity(0.1)
+                                ? const Color(0xFF58A8F0).withOpacity(0.1)
                                 : Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -180,7 +180,7 @@ class _BudgetCard extends ConsumerWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: s.isOnTrack
-                                    ? const Color(0xFF2E7D32)
+                                    ? const Color(0xFF58A8F0)
                                     : Colors.orange),
                           ),
                         ),

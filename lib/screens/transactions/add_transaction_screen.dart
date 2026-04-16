@@ -137,7 +137,7 @@ class _AddTransactionScreenState
                 _TypeBtn(
                   label: 'Income',
                   selected: _txnType == 'income',
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF58A8F0),
                   onTap: () => setState(() {
                     _txnType = 'income';
                     _selectedParent = null;

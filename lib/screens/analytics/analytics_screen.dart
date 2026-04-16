@@ -90,8 +90,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   _StatCard(
                       label: 'Income',
                       value: income,
-                      color: const Color(0xFF2E7D32),
-                      bgColor: const Color(0xFF2E7D32).withOpacity(0.08)),
+                      color: const Color(0xFF58A8F0),
+                      bgColor: const Color(0xFF58A8F0).withOpacity(0.08)),
                   const SizedBox(width: 10),
                   _StatCard(
                       label: 'Expense',
@@ -103,10 +103,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       label: 'Net',
                       value: net,
                       color: net >= 0
-                          ? const Color(0xFF2E7D32)
+                          ? const Color(0xFF58A8F0)
                           : scheme.error,
                       bgColor: (net >= 0
-                              ? const Color(0xFF2E7D32)
+                              ? const Color(0xFF58A8F0)
                               : scheme.error)
                           .withOpacity(0.08),
                       showSign: true),
@@ -222,7 +222,7 @@ class _StatCard extends StatelessWidget {
 const _chartColors = [
   Color(0xFF2196F3),
   Color(0xFFFF5722),
-  Color(0xFF4CAF50),
+  Color(0xFF4F8FE0),
   Color(0xFFFF9800),
   Color(0xFF9C27B0),
   Color(0xFF00BCD4),
@@ -339,7 +339,7 @@ class _BarSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: scheme.onSurface)),
             const Spacer(),
-            _Dot(color: const Color(0xFF2E7D32), label: 'Income'),
+            _Dot(color: const Color(0xFF58A8F0), label: 'Income'),
             const SizedBox(width: 12),
             _Dot(color: scheme.error, label: 'Expense'),
           ],
@@ -413,7 +413,7 @@ class _BarSection extends StatelessWidget {
                   barRods: [
                     BarChartRodData(
                       toY: income,
-                      color: const Color(0xFF2E7D32).withOpacity(0.85),
+                      color: const Color(0xFF58A8F0).withOpacity(0.85),
                       width: 9,
                       borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(4)),

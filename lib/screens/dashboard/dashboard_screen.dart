@@ -12,6 +12,7 @@ import '../budgets/budgets_screen.dart';
 import '../budgets/budget_detail_screen.dart';
 import '../accounts/accounts_screen.dart';
 import '../settings/settings_screen.dart';
+import '../sms_review/sms_review_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -46,6 +47,10 @@ class DashboardScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(14, 4, 14, 80),
           children: [
+            // ── SMS banner ────────────────────────────────────────────
+            _SmsBanner(),
+            const SizedBox(height: 12),
+
             // ── Budgets ──────────────────────────────────────────────
             budgets.when(
               data: (bs) {
@@ -182,7 +187,7 @@ class _SurfaceCard extends StatelessWidget {
 const _budgetAccents = [
   Color(0xFF7C4DFF),
   Color(0xFF00BCD4),
-  Color(0xFF4CAF50),
+  Color(0xFF4F8FE0),
   Color(0xFFFFB300),
   Color(0xFFFF5722),
   Color(0xFFE91E63),
@@ -241,7 +246,7 @@ class _BudgetRow extends ConsumerWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color:
-                        s.isOverBudget ? scheme.error : const Color(0xFF4CAF50),
+                        s.isOverBudget ? scheme.error : const Color(0xFF4F8FE0),
                   ),
                 ),
               ],
@@ -392,11 +397,61 @@ class _AccountsGrid extends StatelessWidget {
   }
 }
 
+// ── SMS review banner ────────────────────────────────────────────────────────
+
+class _SmsBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const SmsReviewScreen()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.sms_outlined, size: 22, color: scheme.onPrimaryContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Review SMS Transactions',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                  Text(
+                    'UPI / bank messages from today',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: scheme.onPrimaryContainer.withOpacity(0.75),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: scheme.onPrimaryContainer),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Category donut ───────────────────────────────────────────────────────────
 
 const _chartColors = [
   Color(0xFFE53935),
-  Color(0xFF43A047),
+  Color(0xFF3A7DB4),
   Color(0xFF00ACC1),
   Color(0xFFFFB300),
   Color(0xFF8E24AA),

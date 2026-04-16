@@ -11,7 +11,7 @@ class MoneyManagerApp extends StatelessWidget {
       title: 'Money Manager',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       home: const MainScreen(),
       debugShowCheckedModeBanner: false,
     );

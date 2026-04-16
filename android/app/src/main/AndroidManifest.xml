@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- Bypass battery optimization so scheduled alarms fire reliably -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <!-- Read SMS inbox for transaction tracking -->
+    <uses-permission android:name="android.permission.READ_SMS"/>
 
     <application
         android:label="Money Manager"
